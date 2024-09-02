@@ -23,6 +23,10 @@ inputs:
     description: Commit message for formatting commits.
     required: false
     default: Format Rust code using rustfmt
+  working-directory:
+    description: Directory to run cargo fmt in.
+    required: false
+    default: .
 
 runs:
   using: node20

@@ -48,7 +48,7 @@ const string_argv_1 = __importDefault(__nccwpck_require__(9663));
 const check = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (args = core.getInput("args"), rustfmt_args = core.getInput("rustfmt-args")) {
     let buffer = "";
     return exec
-        .exec("cargo", ["+nightly", "fmt"]
+        .exec("cargo", ["fmt"]
         .concat((0, string_argv_1.default)(args))
         .concat(["--", "--emit", "json"].concat((0, string_argv_1.default)(rustfmt_args))), {
         listeners: {
@@ -56,6 +56,7 @@ const check = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (a
                 buffer += data.toString().trim();
             },
         },
+        cwd: core.getInput("working-directory")
     })
         .then(() => JSON.parse(buffer).flatMap((output) => output.mismatches.map((mismatch) => ({
         path: output.name,

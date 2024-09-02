@@ -29,7 +29,7 @@ const check = async (
   return exec
     .exec(
       "cargo",
-      ["+nightly", "fmt"]
+      ["fmt"]
         .concat(stringArgv(args))
         .concat(["--", "--emit", "json"].concat(stringArgv(rustfmt_args))),
       {
@@ -38,6 +38,7 @@ const check = async (
             buffer += data.toString().trim();
           },
         },
+        cwd: core.getInput("working-directory")
       },
     )
     .then(() =>
