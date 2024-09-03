@@ -18,6 +18,7 @@ const rustfmt = async (
             output += data.toString();
           },
         },
+        cwd: core.getInput("working-directory"),
       },
     )
     .then(() => output.trim().split(EOL).filter(Boolean));

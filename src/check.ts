@@ -29,7 +29,8 @@ const check = async (
   return exec
     .exec(
       "cargo",
-      ["fmt"]
+      (core.getBooleanInput("override-nightly") ? ["+nightly"] : [])
+        .concat(["fmt"])
         .concat(stringArgv(args))
         .concat(["--", "--emit", "json"].concat(stringArgv(rustfmt_args))),
       {
@@ -38,7 +39,7 @@ const check = async (
             buffer += data.toString().trim();
           },
         },
-        cwd: core.getInput("working-directory")
+        cwd: core.getInput("working-directory"),
       },
     )
     .then(() =>

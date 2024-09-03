@@ -9,6 +9,16 @@ import { readFile as readFileCallback } from "fs";
 
 const readFile = promisify(readFileCallback);
 
+const normalizePathToHaveSlashAtTheEndAlways = (path: string): string => {
+  // Check if the path already ends with a slash
+  if (!path.endsWith("/")) {
+    // If not, add a slash at the end
+    return `${path}/`;
+  }
+  // If it already ends with a slash, return the path as is
+  return path;
+};
+
 async function run(): Promise<void> {
   try {
     const token = core.getInput("token", { required: true });
@@ -126,8 +136,7 @@ async function run(): Promise<void> {
             Promise.resolve();
           } else {
             // Request changes
-            core.debug("Request changes");
-            await octokit.rest.pulls.createReview({
+            const request = {
               ...context.repo,
               pull_number: context.issue.number,
               body: `Please format your code using [rustfmt](https://github.com/rust-lang/rustfmt): \`cargo fmt\``,
@@ -151,7 +160,10 @@ ${result.mismatch.expected}\`\`\``,
                     : result.mismatch.original_end_line,
                 side: "RIGHT",
               })),
-            });
+            } as const;
+            core.debug("Request changes ");
+            core.debug(JSON.stringify(request, null, 2));
+            await octokit.rest.pulls.createReview(request);
           }
         }
         break;

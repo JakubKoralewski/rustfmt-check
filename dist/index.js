@@ -48,7 +48,8 @@ const string_argv_1 = __importDefault(__nccwpck_require__(9663));
 const check = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (args = core.getInput("args"), rustfmt_args = core.getInput("rustfmt-args")) {
     let buffer = "";
     return exec
-        .exec("cargo", ["fmt"]
+        .exec("cargo", (core.getBooleanInput("override-nightly") ? ["+nightly"] : [])
+        .concat(["fmt"])
         .concat((0, string_argv_1.default)(args))
         .concat(["--", "--emit", "json"].concat((0, string_argv_1.default)(rustfmt_args))), {
         listeners: {
@@ -56,7 +57,7 @@ const check = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (a
                 buffer += data.toString().trim();
             },
         },
-        cwd: core.getInput("working-directory")
+        cwd: core.getInput("working-directory"),
     })
         .then(() => JSON.parse(buffer).flatMap((output) => output.mismatches.map((mismatch) => ({
         path: output.name,
@@ -118,6 +119,15 @@ const path_1 = __nccwpck_require__(1017);
 const util_1 = __nccwpck_require__(3837);
 const fs_1 = __nccwpck_require__(7147);
 const readFile = (0, util_1.promisify)(fs_1.readFile);
+const normalizePathToHaveSlashAtTheEndAlways = (path) => {
+    // Check if the path already ends with a slash
+    if (!path.endsWith("/")) {
+        // If not, add a slash at the end
+        return `${path}/`;
+    }
+    // If it already ends with a slash, return the path as is
+    return path;
+};
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
@@ -194,8 +204,7 @@ function run() {
                         }
                         else {
                             // Request changes
-                            core.debug("Request changes");
-                            yield octokit.rest.pulls.createReview(Object.assign(Object.assign({}, context.repo), { pull_number: context.issue.number, body: `Please format your code using [rustfmt](https://github.com/rust-lang/rustfmt): \`cargo fmt\``, event: "REQUEST_CHANGES", comments: output.map((result) => ({
+                            const request = Object.assign(Object.assign({}, context.repo), { pull_number: context.issue.number, body: `Please format your code using [rustfmt](https://github.com/rust-lang/rustfmt): \`cargo fmt\``, event: "REQUEST_CHANGES", comments: output.map((result) => ({
                                     path: result.path.replace(`${process.env.GITHUB_WORKSPACE}/`, ""),
                                     body: `\`\`\`suggestion
 ${result.mismatch.expected}\`\`\``,
@@ -208,7 +217,10 @@ ${result.mismatch.expected}\`\`\``,
                                         ? result.mismatch.original_begin_line
                                         : result.mismatch.original_end_line,
                                     side: "RIGHT",
-                                })) }));
+                                })) });
+                            core.debug("Request changes ");
+                            core.debug(JSON.stringify(request, null, 2));
+                            yield octokit.rest.pulls.createReview(request);
                         }
                     }
                     break;
@@ -327,6 +339,7 @@ const rustfmt = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* 
                 output += data.toString();
             },
         },
+        cwd: core.getInput("working-directory"),
     })
         .then(() => output.trim().split(os_1.EOL).filter(Boolean));
 });

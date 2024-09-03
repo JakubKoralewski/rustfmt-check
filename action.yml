@@ -27,6 +27,10 @@ inputs:
     description: Directory to run cargo fmt in.
     required: false
     default: .
+  override-nightly:
+    description: Whether to add +nightly to cargo invocation.
+    default: "true"
+    required: false
 
 runs:
   using: node20
